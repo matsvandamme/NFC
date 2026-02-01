@@ -8,5 +8,4 @@ App(
     fap_description="Scans Mifare Classic cards and displays UID",
     fap_author="Claude",
     fap_version="1.0",
-    fap_libs=["nfc"],
 )
