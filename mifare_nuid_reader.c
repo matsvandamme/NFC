@@ -6,6 +6,7 @@
 #include <lib/nfc/protocols/mf_classic/mf_classic.h>
 #include <lib/nfc/nfc_poller.h>
 #include <lib/nfc/protocols/mf_classic/mf_classic_poller.h>
+#include <lib/nfc/protocols/iso14443_3a/iso14443_3a.h>
 
 typedef enum {
     EventTypeTick,
@@ -62,30 +63,36 @@ static NfcCommand poller_callback(NfcGenericEvent event, void* context) {
     
     NfcEvent* nfc_event = event;
     if(nfc_event->type == NfcEventTypePollerReady) {
-        const NfcDeviceData* data = nfc_poller_get_data(app->poller);
+        // Get the NFC device data
+        const NfcDevice* device = nfc_poller_get_nfc_device(app->poller);
         
-        if(data) {
-            // Get UID from the NFC data
-            app->uid_len = data->uid_len;
-            memcpy(app->uid, data->uid, app->uid_len);
+        if(device) {
+            // Get ISO14443-3A data which contains the UID
+            const Iso14443_3aData* iso_data = nfc_device_get_data(device, NfcProtocolIso14443_3a);
             
-            // Convert UID to hex string
-            app->uid_str[0] = '\0';
-            for(uint8_t i = 0; i < app->uid_len; i++) {
-                char byte_str[4];
-                snprintf(byte_str, sizeof(byte_str), "%02X", app->uid[i]);
-                strcat(app->uid_str, byte_str);
-                if(i < app->uid_len - 1) {
-                    strcat(app->uid_str, " ");
+            if(iso_data) {
+                // Get UID from ISO14443-3A data
+                app->uid_len = iso_data->uid_len;
+                memcpy(app->uid, iso_data->uid, app->uid_len);
+                
+                // Convert UID to hex string
+                app->uid_str[0] = '\0';
+                for(uint8_t i = 0; i < app->uid_len; i++) {
+                    char byte_str[4];
+                    snprintf(byte_str, sizeof(byte_str), "%02X", app->uid[i]);
+                    strcat(app->uid_str, byte_str);
+                    if(i < app->uid_len - 1) {
+                        strcat(app->uid_str, " ");
+                    }
                 }
+                
+                app->card_detected = true;
+                
+                // Vibrate to indicate card detected
+                notification_message(app->notifications, &sequence_success);
+                
+                view_port_update(app->view_port);
             }
-            
-            app->card_detected = true;
-            
-            // Vibrate to indicate card detected
-            notification_message(app->notifications, &sequence_success);
-            
-            view_port_update(app->view_port);
         }
     }
     
