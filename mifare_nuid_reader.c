@@ -61,39 +61,35 @@ static NfcCommand poller_callback(NfcGenericEvent event, void* context) {
     furi_assert(context);
     MifareNuidApp* app = context;
     
-    NfcEvent* nfc_event = (NfcEvent*)event;
+    // Get the detected protocol data directly
+    const MfClassicData* mfc_data = nfc_poller_get_data(app->poller);
     
-    if(nfc_event->type == NfcEventTypePollerReady) {
-        // Get the detected protocol data
-        const MfClassicData* mfc_data = nfc_poller_get_data(app->poller);
+    if(mfc_data) {
+        // Access ISO14443-3A data from the Mifare Classic data structure
+        const Iso14443_3aData* iso_data = mfc_data->iso14443_3a_data;
         
-        if(mfc_data) {
-            // Access ISO14443-3A data from the Mifare Classic data structure
-            const Iso14443_3aData* iso_data = mfc_data->iso14443_3a_data;
+        if(iso_data && !app->card_detected) {
+            // Get UID
+            app->uid_len = iso_data->uid_len;
+            memcpy(app->uid, iso_data->uid, app->uid_len);
             
-            if(iso_data) {
-                // Get UID
-                app->uid_len = iso_data->uid_len;
-                memcpy(app->uid, iso_data->uid, app->uid_len);
-                
-                // Convert UID to hex string
-                app->uid_str[0] = '\0';
-                for(uint8_t i = 0; i < app->uid_len; i++) {
-                    char byte_str[4];
-                    snprintf(byte_str, sizeof(byte_str), "%02X", app->uid[i]);
-                    strcat(app->uid_str, byte_str);
-                    if(i < app->uid_len - 1) {
-                        strcat(app->uid_str, " ");
-                    }
+            // Convert UID to hex string
+            app->uid_str[0] = '\0';
+            for(uint8_t i = 0; i < app->uid_len; i++) {
+                char byte_str[4];
+                snprintf(byte_str, sizeof(byte_str), "%02X", app->uid[i]);
+                strcat(app->uid_str, byte_str);
+                if(i < app->uid_len - 1) {
+                    strcat(app->uid_str, " ");
                 }
-                
-                app->card_detected = true;
-                
-                // Vibrate to indicate card detected
-                notification_message(app->notifications, &sequence_success);
-                
-                view_port_update(app->view_port);
             }
+            
+            app->card_detected = true;
+            
+            // Vibrate to indicate card detected
+            notification_message(app->notifications, &sequence_success);
+            
+            view_port_update(app->view_port);
         }
     }
     
