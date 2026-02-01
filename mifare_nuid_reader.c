@@ -75,13 +75,11 @@ static NfcCommand poller_callback(NfcGenericEvent event, void* context) {
             memcpy(app->uid, iso_data->uid, app->uid_len);
             
             // Convert UID to hex string
-            app->uid_str[0] = '\0';
+            int pos = 0;
             for(uint8_t i = 0; i < app->uid_len; i++) {
-                char byte_str[4];
-                snprintf(byte_str, sizeof(byte_str), "%02X", app->uid[i]);
-                strcat(app->uid_str, byte_str);
+                pos += snprintf(app->uid_str + pos, sizeof(app->uid_str) - pos, "%02X", app->uid[i]);
                 if(i < app->uid_len - 1) {
-                    strcat(app->uid_str, " ");
+                    pos += snprintf(app->uid_str + pos, sizeof(app->uid_str) - pos, " ");
                 }
             }
             
