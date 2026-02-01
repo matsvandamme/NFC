@@ -61,7 +61,7 @@ static NfcCommand poller_callback(NfcGenericEvent event, void* context) {
     furi_assert(context);
     MifareNuidApp* app = context;
     
-    NfcEvent* nfc_event = event;
+    NfcEvent* nfc_event = (NfcEvent*)event;
     
     if(nfc_event->type == NfcEventTypePollerReady) {
         // Get the detected protocol data
@@ -69,7 +69,7 @@ static NfcCommand poller_callback(NfcGenericEvent event, void* context) {
         
         if(mfc_data) {
             // Access ISO14443-3A data from the Mifare Classic data structure
-            const Iso14443_3aData* iso_data = &mfc_data->iso14443_3a_data;
+            const Iso14443_3aData* iso_data = mfc_data->iso14443_3a_data;
             
             if(iso_data) {
                 // Get UID
