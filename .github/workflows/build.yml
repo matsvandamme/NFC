@@ -1,0 +1,57 @@
+name: Build Flipper Zero App
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install ufbt
+      run: |
+        pip install ufbt
+    
+    - name: Update ufbt SDK
+      run: |
+        ufbt update
+    
+    - name: Build FAP
+      run: |
+        ufbt
+    
+    - name: Get app version
+      id: version
+      run: |
+        echo "version=$(date +'%Y%m%d-%H%M%S')" >> $GITHUB_OUTPUT
+    
+    - name: Create release artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: mifare_nuid_reader-${{ steps.version.outputs.version }}
+        path: dist/*.fap
+        if-no-files-found: error
+    
+    - name: Create Release
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v${{ steps.version.outputs.version }}
+        name: Release ${{ steps.version.outputs.version }}
+        files: dist/*.fap
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
