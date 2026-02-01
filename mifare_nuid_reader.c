@@ -58,6 +58,7 @@ static void input_callback(InputEvent* input_event, void* ctx) {
 }
 
 static NfcCommand poller_callback(NfcGenericEvent event, void* context) {
+    UNUSED(event);
     furi_assert(context);
     MifareNuidApp* app = context;
     
