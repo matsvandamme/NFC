@@ -1,0 +1,13 @@
+App(
+    appid="mifare_nuid_reader",
+    name="Mifare NUID Reader",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="mifare_nuid_reader_app",
+    stack_size=2 * 1024,
+    fap_category="NFC",
+    fap_icon="nfc_10px.png",
+    fap_description="Scans Mifare Classic cards and displays UID",
+    fap_author="Claude",
+    fap_version="1.0",
+    fap_libs=["nfc"],
+)
